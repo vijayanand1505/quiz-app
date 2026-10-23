@@ -1,0 +1,10 @@
+# Installed dependencies and generated caches
+/node_modules/
+
+# Production output
+/build/
+
+# Local deployment settings
+/.vercel/
+.env*.local
+.DS_Store

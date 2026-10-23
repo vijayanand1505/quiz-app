@@ -51,3 +51,16 @@ In this project, you can run the following scripts:
 ## Credits
 
 QuizApp is built and maintained by [Vijay Anand](https://github.com/vijayanand1505).
+
+## Deployment
+
+This project is configured for Vercel using `vercel.json`:
+
+- Framework: Create React App
+- Install command: `npm ci`
+- Build command: `npm run build`
+- Output directory: `build`
+
+Import `vijayanand1505/quiz-app` into Vercel and use `main` as the production branch. With the GitHub integration enabled, pushes to `main` deploy automatically. No environment variables are required for the quiz API.
+
+To deploy from a linked local checkout, run `npx vercel --prod`.

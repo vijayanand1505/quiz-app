@@ -1,26 +1,27 @@
-import React from 'react';
-import { Container, Segment, Header, Icon } from 'semantic-ui-react';
+import React, { useEffect } from 'react';
+import Icon from '../Icon';
 
 const Offline = () => {
-  window.addEventListener('online', () => window.location.reload());
-
+  useEffect(() => {
+    const reconnect = () => window.location.reload();
+    window.addEventListener('online', reconnect);
+    return () => window.removeEventListener('online', reconnect);
+  }, []);
   return (
-    <Container>
-      <Segment placeholder>
-        <Header icon>
-          <Icon name="unlink" />
-          <h1>Offline</h1>
-          <p>
-            There is no Internet connection. We'll try to reload automatically
-            once you're back online!{' '}
-            <span role="img" aria-label="signal">
-              📶
-            </span>
-          </p>
-        </Header>
-      </Segment>
-    </Container>
+    <div className="surface loading-card">
+      <span className="icon-tile">
+        <Icon name="globe" size={26} />
+      </span>
+      <h1>You’re offline.</h1>
+      <p>Check your connection. We’ll reload when you’re back online.</p>
+      <button
+        className="button button-primary"
+        onClick={() => window.location.reload()}
+      >
+        Try again
+        <Icon name="refresh" size={18} />
+      </button>
+    </div>
   );
 };
-
 export default Offline;
