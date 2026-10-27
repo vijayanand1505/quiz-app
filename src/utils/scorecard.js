@@ -7,7 +7,7 @@ export const scoreSummary = (result) =>
     normalizeTestName(result.customName) ? `${result.topic} · ` : ''
   }${difficultyLabel(result.difficulty)}${
     result.timeLimit === 0 ? ' · Untimed' : ''
-  }`;
+  }${result.mode === 'practice' ? ' · Practice mode' : ''}`;
 export const appUrl = () =>
   `${window.location.origin}${window.location.pathname}`;
 
@@ -48,7 +48,11 @@ export const createScorecard = (result, url) =>
     ctx.textAlign = 'left';
     ctx.fillStyle = '#66695f';
     ctx.font = '21px monospace';
-    ctx.fillText('A ROUND WELL SPENT', 74, 176);
+    ctx.fillText(
+      result.mode === 'practice' ? 'PRACTICE ROUND' : 'EXAM ROUND',
+      74,
+      176
+    );
     ctx.fillStyle = '#294c3d';
     ctx.font = '155px Georgia';
     ctx.fillText(String(result.correctAnswers), 66, 329);

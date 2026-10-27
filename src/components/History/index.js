@@ -65,6 +65,18 @@ const History = ({
                   {difficultyLabel(round.difficulty)} · {round.totalQuestions}{' '}
                   questions · {formatTimeLimit(round.timeLimit)}
                   {round.timeLimit > 0 ? ' limit' : ''}
+                  {round.mode === 'practice'
+                    ? ' · Practice mode'
+                    : ' · Exam mode'}
+                  {round.attemptNumber
+                    ? ` · Attempt ${round.attemptNumber}${
+                        round.maxAttempts ? ` of ${round.maxAttempts}` : ''
+                      }`
+                    : ''}
+                  {round.isCustomPreview ? ' · Creator preview' : ''}
+                  {round.challengeHost
+                    ? ` · Challenge from ${round.challengeHost}`
+                    : ''}
                 </p>
               </div>
               <span className="history-best">

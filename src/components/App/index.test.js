@@ -2,6 +2,12 @@ import React from 'react';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import App from './index';
 import { saveHistory } from '../../utils/quizHistory';
+import { ATTEMPTS_KEY } from '../../utils/quizAttempts';
+import {
+  newQuizDraft,
+  newQuestion,
+  saveQuizDrafts,
+} from '../../utils/customQuiz';
 
 jest.mock('../Main', () => {
   const React = require('react');
@@ -169,4 +175,368 @@ test('retains an active quiz across area changes and shows its saved result in t
   ).toBeInTheDocument();
   navigate('#quiz');
   expect(screen.getByRole('heading', { name: 'A clean sweep.' })).toBeVisible();
+});
+
+const invitePayload = {
+  v: 1,
+  host: 'Vijay',
+  title: 'Friday challenge',
+  settings: ['0', 'easy', '0', 120, 'Mixed topics'],
+  score: [0, 10000],
+  questions: [
+    ['Challenge question?', ['Alpha', 'Beta'], 0, 'Mixed topics', 'easy'],
+  ],
+};
+const inviteHash = (payload = invitePayload) =>
+  `#challenge=1j.${Buffer.from(JSON.stringify(payload)).toString('base64url')}`;
+
+test('accepts an incoming challenge without API calls and compares its saved result', async () => {
+  global.fetch = jest.fn();
+  window.history.replaceState(null, '', inviteHash());
+  render(<App />);
+  await act(async () => {});
+  expect(
+    screen.getByRole('heading', { name: 'Vijay challenged you.' })
+  ).toBeVisible();
+  expect(screen.getByText('Friday challenge')).toBeVisible();
+  expect(screen.queryByText('Challenge question?')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Accept challenge' }));
+  navigate('#quiz');
+  act(() => jest.advanceTimersByTime(1000));
+  expect(
+    screen.getByRole('heading', { name: 'Challenge question?' })
+  ).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Alpha' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Finish round' }));
+  act(() => jest.advanceTimersByTime(2000));
+  expect(
+    screen.getByRole('heading', { name: 'You won the challenge.' })
+  ).toBeVisible();
+  expect(fetch).not.toHaveBeenCalled();
+  const stored = JSON.parse(localStorage.getItem('quizapp.rounds.v1'));
+  expect(stored.rounds[0]).toMatchObject({
+    correctAnswers: 1,
+    timeLimit: 120,
+    challengeHost: 'Vijay',
+    customName: 'Friday challenge',
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
+  act(() => jest.advanceTimersByTime(1000));
+  expect(
+    screen.getByRole('heading', { name: 'Challenge question?' })
+  ).toBeVisible();
+  expect(
+    screen
+      .getAllByRole('button')
+      .filter((button) => button.classList.contains('answer-option'))
+      .map((button) => button.textContent)
+  ).toEqual(['AAlpha', 'BBeta']);
+});
+
+test('shows a recoverable invalid-link page and can return to quiz setup', async () => {
+  window.history.replaceState(null, '', '#challenge=broken');
+  render(<App />);
+  await act(async () => {});
+  expect(
+    screen.getByRole('heading', { name: 'Can’t open this challenge.' })
+  ).toHaveFocus();
+  expect(
+    screen.queryByRole('button', { name: 'Accept challenge' })
+  ).not.toBeInTheDocument();
+  navigate('#quiz');
+  expect(screen.getByRole('heading', { name: 'Quiz setup' })).toBeVisible();
+});
+
+test('does not replace a running quiz when a new challenge link is opened', async () => {
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Start sample quiz' }));
+  act(() => jest.advanceTimersByTime(1000));
+  fireEvent.click(screen.getByRole('button', { name: 'Alpha' }));
+  navigate(inviteHash());
+  await act(async () => {});
+  expect(
+    screen.getByText(/Finish it before starting this challenge/)
+  ).toBeVisible();
+  expect(
+    screen.queryByRole('button', { name: 'Accept challenge' })
+  ).not.toBeInTheDocument();
+  navigate('#quiz');
+  expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+});
+
+test('keeps the builder separate, plays a saved custom quiz, and retains its editor across navigation', () => {
+  const draft = {
+    ...newQuizDraft(),
+    title: 'Class quiz',
+    questions: [
+      {
+        ...newQuestion(),
+        prompt: 'A custom question?',
+        options: ['Alpha', 'Beta', 'Gamma', 'Delta'],
+        correctIndex: 1,
+      },
+    ],
+  };
+  saveQuizDrafts({ drafts: [draft], selectedId: draft.id });
+  render(<App />);
+  navigate('#builder');
+  expect(
+    screen.getByRole('heading', { name: 'Make it your quiz.' })
+  ).toBeVisible();
+  expect(screen.getByLabelText('Quiz title')).toHaveValue('Class quiz');
+  fireEvent.click(screen.getByRole('button', { name: 'Play quiz' }));
+  navigate('#quiz');
+  act(() => jest.advanceTimersByTime(1000));
+  expect(
+    screen.getByRole('heading', { name: 'A custom question?' })
+  ).toBeVisible();
+  navigate('#builder');
+  expect(screen.getByRole('button', { name: 'Play quiz' })).toBeDisabled();
+  expect(screen.getByLabelText('Quiz title')).toHaveValue('Class quiz');
+  navigate('#quiz');
+  fireEvent.click(screen.getByRole('button', { name: 'Beta' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Finish round' }));
+  act(() => jest.advanceTimersByTime(2000));
+  expect(
+    JSON.parse(localStorage.getItem('quizapp.rounds.v1')).rounds[0]
+  ).toMatchObject({
+    topic: 'Class quiz',
+    difficulty: 'custom',
+    customQuizKey: `${draft.id}.1`,
+    correctAnswers: 1,
+  });
+  navigate('#builder');
+  expect(screen.getByLabelText('Quiz title')).toHaveValue('Class quiz');
+  expect(screen.getByRole('button', { name: 'Play quiz' })).toBeEnabled();
+});
+
+const customHash = (payload) =>
+  `#custom=1j.${Buffer.from(JSON.stringify(payload)).toString('base64url')}`;
+test('opens a shared custom quiz independently and scores it without using the trivia API', async () => {
+  global.fetch = jest.fn();
+  const payload = {
+    v: 1,
+    id: 'shared-quiz',
+    revision: 2,
+    title: 'Family quiz',
+    author: 'Vijay',
+    description: 'A quick round for everyone.',
+    timeLimit: 0,
+    questions: [['A shared question?', 'boolean', ['True', 'False'], 0]],
+  };
+  window.history.replaceState(null, '', customHash(payload));
+  render(<App />);
+  await act(async () => {});
+  expect(screen.getByRole('heading', { name: 'Family quiz' })).toBeVisible();
+  expect(screen.getByText('A quiz by Vijay')).toBeVisible();
+  expect(screen.queryByText('A shared question?')).not.toBeInTheDocument();
+  await act(async () =>
+    fireEvent.click(screen.getByRole('button', { name: 'Start this quiz' }))
+  );
+  navigate('#quiz');
+  act(() => jest.advanceTimersByTime(1000));
+  fireEvent.click(screen.getByRole('button', { name: 'True' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Finish round' }));
+  act(() => jest.advanceTimersByTime(2000));
+  expect(screen.getByRole('heading', { name: 'A clean sweep.' })).toBeVisible();
+  expect(
+    screen.queryByRole('heading', { name: 'You won the challenge.' })
+  ).not.toBeInTheDocument();
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+test('handles malformed custom links without replacing a running quiz', async () => {
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Start sample quiz' }));
+  act(() => jest.advanceTimersByTime(1000));
+  fireEvent.click(screen.getByRole('button', { name: 'Alpha' }));
+  navigate('#custom=broken');
+  await act(async () => {});
+  expect(
+    screen.getByRole('heading', { name: 'Can’t open this quiz.' })
+  ).toHaveFocus();
+  expect(
+    screen.getByRole('link', { name: 'Return to your quiz' })
+  ).toHaveAttribute('href', '#quiz');
+  navigate('#quiz');
+  expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+});
+
+test('counts shared quiz starts and replays, then keeps the exhausted limit after reopening', async () => {
+  const hash = customHash({
+    v: 1,
+    id: 'limited',
+    revision: 1,
+    title: 'Two tries',
+    author: '',
+    description: '',
+    timeLimit: 0,
+    maxAttempts: 2,
+    questions: [['A limited question?', 'boolean', ['True', 'False'], 0]],
+  });
+  window.history.replaceState(null, '', hash);
+  const { unmount } = render(<App />);
+  await act(async () => {});
+  expect(
+    screen.getByText('2 attempts remaining on this browser.')
+  ).toBeVisible();
+  await act(async () =>
+    fireEvent.click(screen.getByRole('button', { name: 'Start this quiz' }))
+  );
+  navigate('#quiz');
+  act(() => jest.advanceTimersByTime(1000));
+  expect(screen.getByText('Attempt 1 of 2')).toBeVisible();
+  const finish = () => {
+    fireEvent.click(screen.getByRole('button', { name: 'True' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish round' }));
+    act(() => jest.advanceTimersByTime(2000));
+  };
+  finish();
+  expect(screen.getByRole('button', { name: 'Play again' })).toBeEnabled();
+  await act(async () =>
+    fireEvent.click(screen.getByRole('button', { name: 'Play again' }))
+  );
+  act(() => jest.advanceTimersByTime(1000));
+  expect(screen.getByText('Attempt 2 of 2')).toBeVisible();
+  finish();
+  expect(screen.getByRole('button', { name: 'Play again' })).toBeDisabled();
+  expect(
+    JSON.parse(localStorage.getItem('quizapp.rounds.v1')).rounds[0]
+  ).toMatchObject({ attemptNumber: 2, maxAttempts: 2 });
+  unmount();
+  // Clearing results cannot restore consumed attempts.
+  saveHistory([], [], 0);
+  window.history.replaceState(null, '', hash);
+  render(<App />);
+  await act(async () => {});
+  expect(
+    screen.getByText('No attempts remaining on this browser.')
+  ).toBeVisible();
+  expect(
+    screen.getByRole('button', { name: 'Start this quiz' })
+  ).toBeDisabled();
+  expect(
+    JSON.parse(localStorage.getItem(ATTEMPTS_KEY)).counts['limited.1']
+  ).toBe(2);
+}, 30000);
+
+test('creator previews can replay an exhausted custom quiz without consuming attempts', () => {
+  const draft = {
+    ...newQuizDraft(),
+    title: 'Preview',
+    maxAttempts: 1,
+    questions: [
+      {
+        ...newQuestion(),
+        prompt: 'Preview question?',
+        type: 'boolean',
+        options: ['True', 'False'],
+        correctIndex: 0,
+      },
+    ],
+  };
+  saveQuizDrafts({ drafts: [draft], selectedId: draft.id });
+  localStorage.setItem(
+    ATTEMPTS_KEY,
+    JSON.stringify({ v: 1, counts: { [`${draft.id}.1`]: 1 } })
+  );
+  window.history.replaceState(null, '', '#builder');
+  render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Play quiz' }));
+  navigate('#quiz');
+  act(() => jest.advanceTimersByTime(1000));
+  expect(screen.getByText('Creator preview · No attempts used.')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'True' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Finish round' }));
+  act(() => jest.advanceTimersByTime(2000));
+  expect(screen.getByRole('button', { name: 'Play again' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
+  act(() => jest.advanceTimersByTime(1000));
+  expect(
+    screen.getByRole('heading', { name: 'Preview question?' })
+  ).toBeVisible();
+  expect(
+    JSON.parse(localStorage.getItem(ATTEMPTS_KEY)).counts[`${draft.id}.1`]
+  ).toBe(1);
+});
+
+test('saves a question from a round, preserves it across areas, and starts isolated bookmark practice', async () => {
+  const { unmount } = render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Start sample quiz' }));
+  act(() => jest.advanceTimersByTime(1000));
+  fireEvent.click(screen.getByRole('button', { name: 'Save question' }));
+  expect(
+    screen.getByRole('button', { name: 'Question saved' })
+  ).toHaveAttribute('aria-pressed', 'true');
+  navigate('#bookmarks');
+  expect(
+    screen.getByRole('heading', { name: 'Saved questions' })
+  ).toBeVisible();
+  expect(
+    screen.getByRole('button', { name: 'Practice selected (1)' })
+  ).toBeDisabled();
+  navigate('#quiz');
+  fireEvent.click(screen.getByRole('button', { name: 'Alpha' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Finish round' }));
+  act(() => jest.advanceTimersByTime(2000));
+  fireEvent.click(screen.getByRole('tab', { name: 'Review answers' }));
+  expect(screen.getByRole('button', { name: 'Question saved' })).toBeVisible();
+  // Returning after a browser reload keeps the library independent of results.
+  unmount();
+  window.history.replaceState(null, '', '#bookmarks');
+  render(<App />);
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Practice selected (1)' })
+  );
+  navigate('#quiz');
+  act(() => jest.advanceTimersByTime(1000));
+  expect(
+    screen.getByRole('heading', { name: 'Sample question?' })
+  ).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Beta' }));
+  expect(screen.getByText('Correct answer: Alpha')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Finish round' }));
+  act(() => jest.advanceTimersByTime(2000));
+  expect(
+    JSON.parse(localStorage.getItem('quizapp.rounds.v1')).rounds[0]
+  ).toMatchObject({
+    mode: 'practice',
+    fromBookmarks: true,
+    timeLimit: 0,
+    correctAnswers: 0,
+  });
+  expect(localStorage.getItem(ATTEMPTS_KEY)).toBeNull();
+}, 30000);
+
+test('opens collections directly and restores collection membership when returning to the builder', () => {
+  const draft = {
+    ...newQuizDraft(),
+    title: 'Science quiz',
+    collectionId: 'science',
+  };
+  saveQuizDrafts({
+    drafts: [draft],
+    selectedId: draft.id,
+    collections: [{ id: 'science', name: 'Science' }],
+  });
+  window.history.replaceState(null, '', '#builder/collections');
+  render(<App />);
+  expect(
+    screen.getByRole('heading', { name: 'Quiz collections' })
+  ).toBeVisible();
+  fireEvent.click(
+    screen.getByRole('button', { name: /Science quiz.*Edit quiz/ })
+  );
+  navigate('#builder');
+  expect(screen.getByLabelText('Quiz title')).toHaveValue('Science quiz');
+  expect(screen.getByLabelText('Collection')).toHaveValue('science');
+  navigate('#bookmarks');
+  navigate('#builder/collections');
+  expect(screen.getByRole('heading', { name: 'Science' })).toBeVisible();
 });

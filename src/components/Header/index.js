@@ -3,7 +3,11 @@ import Icon from '../Icon';
 import ThemeToggle from '../ThemeToggle';
 import PropTypes from 'prop-types';
 
-const Header = ({ activeArea = 'quiz', quizLabel = 'Take a quiz' }) => {
+const Header = ({
+  activeArea = 'quiz',
+  quizLabel = 'Take a quiz',
+  quizHref = '#quiz',
+}) => {
   const [promptEvent, setPromptEvent] = useState(null);
   const [appAccepted, setAppAccepted] = useState(false);
   useEffect(() => {
@@ -31,7 +35,7 @@ const Header = ({ activeArea = 'quiz', quizLabel = 'Take a quiz' }) => {
         </div>
         <nav className="site-navigation" aria-label="Main navigation">
           <a
-            href="#quiz"
+            href={quizHref}
             aria-current={activeArea === 'quiz' ? 'page' : undefined}
           >
             {quizLabel}
@@ -41,6 +45,18 @@ const Header = ({ activeArea = 'quiz', quizLabel = 'Take a quiz' }) => {
             aria-current={activeArea === 'record' ? 'page' : undefined}
           >
             My record
+          </a>
+          <a
+            href="#builder"
+            aria-current={activeArea === 'builder' ? 'page' : undefined}
+          >
+            Create quiz
+          </a>
+          <a
+            href="#bookmarks"
+            aria-current={activeArea === 'bookmarks' ? 'page' : undefined}
+          >
+            Saved
           </a>
         </nav>
         <div className="header-right">
@@ -78,7 +94,8 @@ const Header = ({ activeArea = 'quiz', quizLabel = 'Take a quiz' }) => {
   );
 };
 Header.propTypes = {
-  activeArea: PropTypes.oneOf(['quiz', 'record']),
+  activeArea: PropTypes.oneOf(['quiz', 'record', 'builder', 'bookmarks']),
   quizLabel: PropTypes.string,
+  quizHref: PropTypes.string,
 };
 export default Header;

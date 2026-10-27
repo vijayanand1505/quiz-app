@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Header from '../Header';
 
-const Layout = ({ children, activeArea, quizLabel }) => (
+const Layout = ({ children, activeArea, quizLabel, quizHref }) => (
   <>
     <a
       className="skip-link"
@@ -16,7 +16,7 @@ const Layout = ({ children, activeArea, quizLabel }) => (
     >
       Skip to main content
     </a>
-    <Header activeArea={activeArea} quizLabel={quizLabel} />
+    <Header activeArea={activeArea} quizLabel={quizLabel} quizHref={quizHref} />
     <main id="main-content" className="app-main" tabIndex={-1}>
       {children}
     </main>
@@ -32,7 +32,7 @@ const Layout = ({ children, activeArea, quizLabel }) => (
         </a>
       </span>
       <span>
-        Questions from{' '}
+        Trivia questions from{' '}
         <a href="https://opentdb.com" target="_blank" rel="noreferrer">
           Open Trivia Database ↗
         </a>
@@ -44,5 +44,6 @@ Layout.propTypes = {
   children: PropTypes.node,
   activeArea: PropTypes.string,
   quizLabel: PropTypes.string,
+  quizHref: PropTypes.string,
 };
 export default Layout;

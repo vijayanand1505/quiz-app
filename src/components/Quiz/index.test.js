@@ -336,3 +336,45 @@ test('can turn shortcuts off while preserving native keyboard activation and sav
   ).toBeInTheDocument();
   localStorage.removeItem('quizapp.shortcuts');
 });
+
+test('practice reveals feedback once and locks first answers for both buttons and shortcuts', () => {
+  localStorage.removeItem('quizapp.shortcuts');
+  const endQuiz = jest.fn();
+  render(
+    <Quiz data={data} countdownTime={0} endQuiz={endQuiz} mode="practice" />
+  );
+  expect(screen.queryByText('Correct answer: Alpha')).not.toBeInTheDocument();
+  answer('Beta');
+  expect(screen.getByText('Not quite.')).toBeVisible();
+  expect(screen.getByText('Correct answer: Alpha')).toBeVisible();
+  expect(screen.getByRole('button', { name: /Alpha$/ })).toBeDisabled();
+  fireEvent.keyDown(document.body, { key: '1' });
+  expect(screen.getByRole('button', { name: /Beta$/ })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  next();
+  answer('Gamma');
+  previous();
+  expect(screen.getByText('Correct answer: Alpha')).toBeVisible();
+  expect(screen.getByRole('button', { name: /Beta$/ })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Expire timer' }));
+  expect(endQuiz.mock.calls[0][0].correctAnswers).toBe(1);
+});
+
+test('exam keeps feedback hidden and answers editable', () => {
+  render(
+    <Quiz data={data} countdownTime={0} endQuiz={jest.fn()} mode="exam" />
+  );
+  answer('Beta');
+  answer('Alpha');
+  expect(screen.queryByText('Correct answer: Alpha')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Alpha$/ })).toBeEnabled();
+  expect(screen.getByRole('button', { name: /Alpha$/ })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+});

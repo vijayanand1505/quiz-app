@@ -15,6 +15,13 @@ const Result = ({
   isPersonalBest = false,
   previousBest,
   onRenameTest,
+  challenge,
+  questions,
+  attemptSettings,
+  currentAttempt,
+  replayDisabled,
+  bookmarks,
+  onToggleBookmark,
 }) => {
   const [activeTab, setActiveTab] = useState('Stats');
   const [reviewFilter, setReviewFilter] = useState('all');
@@ -89,6 +96,8 @@ const Result = ({
         {activeTab === 'Stats' ? (
           <Stats
             round={round}
+            challenge={challenge}
+            questions={questions}
             isPersonalBest={isPersonalBest}
             previousBest={previousBest}
             incorrectAnswers={incorrectAnswers}
@@ -99,6 +108,9 @@ const Result = ({
             correctAnswers={correctAnswers}
             timeTaken={timeTaken}
             replayQuiz={replayQuiz}
+            replayDisabled={replayDisabled}
+            attemptSettings={attemptSettings}
+            currentAttempt={currentAttempt}
             resetQuiz={resetQuiz}
           />
         ) : (
@@ -107,6 +119,9 @@ const Result = ({
               questionsAndAnswers={questionsAndAnswers}
               filter={reviewFilter}
               onFilterChange={setReviewFilter}
+              sourceQuestions={questions}
+              bookmarks={bookmarks}
+              onToggleBookmark={onToggleBookmark}
             />
             <div className="review-actions">
               <button className="button button-secondary" onClick={resetQuiz}>
@@ -126,7 +141,14 @@ const Result = ({
   );
 };
 Result.propTypes = {
+  bookmarks: PropTypes.array,
+  onToggleBookmark: PropTypes.func,
   round: PropTypes.object,
+  attemptSettings: PropTypes.object,
+  currentAttempt: PropTypes.object,
+  replayDisabled: PropTypes.bool,
+  challenge: PropTypes.object,
+  questions: PropTypes.array,
   isPersonalBest: PropTypes.bool,
   previousBest: PropTypes.object,
   onRenameTest: PropTypes.func,

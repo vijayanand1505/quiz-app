@@ -125,3 +125,13 @@ test('aborts an unfinished request on unmount', () => {
   unmount();
   expect(signal.aborted).toBe(true);
 });
+
+test('passes the chosen practice mode into a new round', async () => {
+  const startQuiz = jest.fn();
+  fetch.mockResolvedValue(success);
+  render(<Main startQuiz={startQuiz} />);
+  fireEvent.click(screen.getByRole('radio', { name: /Practice mode/ }));
+  start();
+  await waitFor(() => expect(startQuiz).toHaveBeenCalled());
+  expect(startQuiz.mock.calls[0][2].mode).toBe('practice');
+});

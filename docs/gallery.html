@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QuizApp — Screenshot gallery</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --canvas: #f4f1e9;
+        --paper: #fffefa;
+        --ink: #292f29;
+        --muted: #66695f;
+        --line: #d9d7cb;
+        --green: #294c3d;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font: 15px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      main {
+        max-width: 1180px;
+        margin: auto;
+        padding: 40px 24px 60px;
+      }
+      header {
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 32px;
+        margin-bottom: 30px;
+      }
+      .brand {
+        font: 700 32px Georgia, serif;
+        margin: 0 0 30px;
+      }
+      .brand span {
+        color: #a74d32;
+      }
+      .kicker {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 11px;
+      }
+      h1 {
+        font: 400 clamp(32px, 5vw, 48px) / 1.15 Georgia, serif;
+        margin: 12px 0 18px;
+      }
+      header p {
+        max-width: 760px;
+        color: var(--muted);
+      }
+      .actions {
+        display: flex;
+        gap: 22px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+      }
+      a {
+        color: var(--green);
+        text-underline-offset: 4px;
+      }
+      a:focus-visible {
+        outline: 2px solid #a74d32;
+        outline-offset: 5px;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+      figure {
+        margin: 0;
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: var(--paper);
+        overflow: hidden;
+      }
+      figure > a {
+        display: flex;
+        height: 340px;
+        padding: 12px;
+        align-items: center;
+        justify-content: center;
+        background: #ecebe4;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      figcaption {
+        padding: 18px 20px;
+        border-top: 1px solid var(--line);
+      }
+      h2 {
+        font: 400 23px/1.3 Georgia, serif;
+        margin: 0 0 8px;
+      }
+      figcaption p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .featured {
+        grid-column: 1 / -1;
+      }
+      .featured > a {
+        height: 560px;
+      }
+      footer {
+        color: var(--muted);
+        margin-top: 34px;
+        border-top: 1px solid var(--line);
+        padding-top: 20px;
+        font-size: 12px;
+      }
+      @media (max-width: 680px) {
+        main {
+          padding: 26px 16px;
+        }
+        .gallery {
+          grid-template-columns: 1fr;
+        }
+        figure > a,
+        .featured > a {
+          height: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="brand">QuizApp<span>.</span></p>
+        <p class="kicker">16 screenshots · Desktop and mobile</p>
+        <h1>A look inside QuizApp.</h1>
+        <p>
+          Explore the real quiz screens, custom quiz builder, friend challenges,
+          saved questions, and progress tools. Select any image to view the
+          original screenshot at full size.
+        </p>
+        <p>
+          These screenshots show the local application with illustrative
+          questions, drafts, and history.
+        </p>
+        <nav class="actions" aria-label="Gallery navigation">
+          <a href="https://quizzivora.vercel.app/">Try the live app</a>
+          <a href="https://github.com/vijayanand1505/quiz-app"
+            >View the project</a
+          >
+          <a href="README.md">Screenshot capture guide</a>
+        </nav>
+      </header>
+      <div class="gallery">
+        <figure class="featured">
+          <a href="images/quiz-setup.png"
+            ><img
+              src="images/quiz-setup.png"
+              alt="Quiz setup with mode choices, subjects, difficulty, timing, and suggested rounds"
+          /></a>
+          <figcaption>
+            <h2>Make it your kind of quiz.</h2>
+            <p>
+              Choose a subject, difficulty, question count, mode, and timing—or
+              start with a suggested round.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/practice-mode.png"
+            ><img
+              src="images/practice-mode.png"
+              alt="Practice mode with an incorrect selected answer and the correct answer revealed"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>Learn as you go.</h2>
+            <p>
+              Practice mode gives immediate feedback and keeps your first answer
+              for scoring.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/question-navigator.png"
+            ><img
+              src="images/question-navigator.png"
+              alt="Exam question with a numbered navigator, saved-question button, and timer"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>Find your place.</h2>
+            <p>
+              See answered and unanswered questions, jump between them, and
+              return to previous answers.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/score-and-results.png"
+            ><img
+              src="images/score-and-results.png"
+              alt="Named quiz result with score, accuracy, time taken, and answer breakdown"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>See how you did.</h2>
+            <p>
+              A named scorecard shows accuracy, timing, and correct, incorrect,
+              and unanswered counts.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/answer-review.png"
+            ><img
+              src="images/answer-review.png"
+              alt="Answer review showing a submitted incorrect answer beside the correct answer"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>Give missed answers another look.</h2>
+            <p>
+              Filter your answers and save a question for a future study
+              session.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/saved-questions.png"
+            ><img
+              src="images/saved-questions.png"
+              alt="Saved-question library with search, checkboxes, and a practice action"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>Keep the good questions.</h2>
+            <p>
+              Search your bookmarks and select questions for an untimed practice
+              round.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/quiz-builder.png"
+            ><img
+              src="images/quiz-builder.png"
+              alt="Custom question editor with answer choices and a selected correct answer"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>Write your own round.</h2>
+            <p>
+              Build multiple-choice or true/false questions and choose the
+              correct answers.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/quiz-settings.png"
+            ><img
+              src="images/quiz-settings.png"
+              alt="Custom quiz title, author, collection, mode, attempt allowance, and time settings"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>Set the rules.</h2>
+            <p>
+              Choose a mode, optional timer, collection, and shared-quiz attempt
+              allowance.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/quiz-collections.png"
+            ><img
+              src="images/quiz-collections.png"
+              alt="Named quiz collections with their quizzes and organisation controls"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>A place for every quiz.</h2>
+            <p>
+              Group your drafts into collections and move quizzes as your
+              library grows.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/custom-quiz-invitation.png"
+            ><img
+              src="images/custom-quiz-invitation.png"
+              alt="Shared custom quiz invitation displaying remaining attempts and a start button"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>Ready to pass it on.</h2>
+            <p>
+              A shared invitation presents the author, settings, and remaining
+              attempts before play starts.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/friend-challenge.png"
+            ><img
+              src="images/friend-challenge.png"
+              alt="Friend challenge invitation displaying the host score and quiz settings"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>One round. Two scores.</h2>
+            <p>
+              Send a friend the same questions, answer order, mode, and time
+              limit.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/challenge-comparison.png"
+            ><img
+              src="images/challenge-comparison.png"
+              alt="Completed friend challenge comparing both players' scores and times"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>A friendly comparison.</h2>
+            <p>
+              Compare the completed round with the score supplied in the
+              challenge link.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/share-score.png"
+            ><img
+              src="images/share-score.png"
+              alt="Share dialog containing a scorecard preview, image download, and copy action"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>One for the group chat.</h2>
+            <p>Download a PNG scorecard or copy the text of your result.</p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/recent-rounds.png"
+            ><img
+              src="images/recent-rounds.png"
+              alt="Recent-round history with scores, test names, dates, and personal-best markers"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>Keep a record.</h2>
+            <p>
+              Revisit recent rounds, rename tests, and see matching personal
+              bests.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/progress-over-time.png"
+            ><img
+              src="images/progress-over-time.png"
+              alt="Progress dashboard showing an accuracy chart and summary statistics"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>See the progress.</h2>
+            <p>
+              Compare matching rounds through an interactive accuracy chart and
+              summary metrics.
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <a href="images/mobile-dark.png"
+            ><img
+              src="images/mobile-dark.png"
+              alt="Mobile quiz in dark theme showing answer choices and practice feedback"
+              loading="lazy"
+          /></a>
+          <figcaption>
+            <h2>Comfortable on a smaller screen.</h2>
+            <p>
+              Responsive layouts and dark mode keep your round readable on
+              mobile.
+            </p>
+          </figcaption>
+        </figure>
+      </div>
+      <footer>
+        Built by <a href="https://github.com/vijayanand1505">Vijay Anand</a>.
+        Screenshots are stored with this project and load without external image
+        hosting.
+      </footer>
+    </main>
+  </body>
+</html>

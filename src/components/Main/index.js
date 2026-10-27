@@ -9,9 +9,11 @@ import {
 } from '../../constants';
 import { loadQuestions } from '../../utils/loadQuestions';
 import Icon from '../Icon';
+import QuizMode from '../QuizMode';
 
 const Main = ({ startQuiz }) => {
   const [category, setCategory] = useState('0');
+  const [mode, setMode] = useState('exam');
   const [numOfQuestions, setNumOfQuestions] = useState(5);
   const [difficulty, setDifficulty] = useState('easy');
   const [questionsType, setQuestionsType] = useState('0');
@@ -87,6 +89,7 @@ const Main = ({ startQuiz }) => {
       const questions = await loadQuestions(params, controller.signal);
       if (controller.signal.aborted) return;
       startQuiz(questions, untimed ? 0 : totalSeconds, {
+        mode,
         categoryId: category,
         difficulty,
         format: questionsType,
@@ -199,6 +202,7 @@ const Main = ({ startQuiz }) => {
             </div>
           )}
           <fieldset className="setup-fields" disabled={processing}>
+            <QuizMode value={mode} onChange={setMode} />
             <div className="field-grid topic-fields">
               <div className="field">
                 <label htmlFor="quiz-category">Subject</label>
@@ -436,8 +440,9 @@ const Main = ({ startQuiz }) => {
           <section className="house-rules">
             <h3>A note before you start</h3>
             <p>
-              One answer per question. You’ll get your score and the correct
-              answers at the end.
+              {mode === 'practice'
+                ? 'One answer per question. You’ll get feedback immediately, then review your score at the end.'
+                : 'One answer per question. You’ll get your score and the correct answers at the end.'}
             </p>
             <p className="house-rule-aside">
               No looking things up. We’re trusting you.

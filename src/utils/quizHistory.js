@@ -103,6 +103,9 @@ export const roundKey = (round) =>
     round.format,
     round.totalQuestions,
     round.timeLimit,
+    ...(round.customQuizKey ? [round.customQuizKey] : []),
+    ...(round.mode === 'practice' ? ['practice'] : []),
+    ...(round.fromBookmarks ? ['saved-questions'] : []),
   ].join('|');
 export const isBetterRound = (round, best) =>
   !best ||
@@ -114,6 +117,8 @@ export const findPersonalBest = (rounds, round) =>
     .filter((item) => roundKey(item) === roundKey(round))
     .reduce((best, item) => (isBetterRound(item, best) ? item : best), null);
 export const difficultyLabel = (difficulty) =>
-  difficulty === '0'
+  difficulty === 'custom'
+    ? 'Custom quiz'
+    : difficulty === '0'
     ? 'Mixed levels'
     : difficulty.charAt(0).toUpperCase() + difficulty.slice(1);

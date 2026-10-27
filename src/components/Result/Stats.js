@@ -2,6 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import ShareButton from '../ShareButton';
 import Icon from '../Icon';
+import AttemptNotice from '../AttemptNotice';
+import { quizModeLabel } from '../../utils/quizMode';
 import { calculateScore, timeConverter } from '../../utils';
 import {
   difficultyLabel,
@@ -9,6 +11,8 @@ import {
   normalizeTestName,
 } from '../../utils/quizHistory';
 import RoundName from '../RoundName';
+import ChallengeFriend from '../ChallengeFriend';
+import ChallengeComparison from '../ChallengeComparison';
 
 const Stats = ({
   totalQuestions,
@@ -23,11 +27,24 @@ const Stats = ({
   unansweredQuestions = 0,
   onReview,
   onRename,
+  challenge,
+  questions,
+  attemptSettings,
+  currentAttempt,
+  replayDisabled = false,
 }) => {
   const score = calculateScore(totalQuestions, correctAnswers);
   const { hours, minutes, seconds } = timeConverter(timeTaken);
   return (
     <section className="surface results-card">
+      {challenge && (
+        <ChallengeComparison
+          challenge={challenge}
+          correctAnswers={correctAnswers}
+          totalQuestions={totalQuestions}
+          timeTaken={timeTaken}
+        />
+      )}
       {isPersonalBest && (
         <div className="personal-best-notice" role="status">
           <Icon name="trophy" size={21} />
@@ -141,14 +158,38 @@ const Stats = ({
           </strong>
         </div>
       </div>
+      {replayDisabled && (
+        <p className="attempt-replay-note" id="replay-attempt-note">
+          {!attemptSettings?.maxAttempts
+            ? ''
+            : 'Another attempt is not available on this browser. You can still review your answers or start a different quiz.'}
+        </p>
+      )}
+      <div className="result-attempts">
+        {round && (
+          <p className="round-mode-label">
+            {quizModeLabel(round.mode)}
+            {round.fromBookmarks ? ' · Saved questions' : ''}
+          </p>
+        )}
+        <AttemptNotice settings={attemptSettings} current={currentAttempt} />
+      </div>
       <div className="results-actions">
-        <button className="button button-primary" onClick={replayQuiz}>
+        <button
+          className="button button-primary"
+          onClick={replayQuiz}
+          disabled={replayDisabled}
+          aria-describedby={replayDisabled ? 'replay-attempt-note' : undefined}
+        >
           <Icon name="refresh" size={18} /> Play again
         </button>
         <button className="button button-secondary" onClick={resetQuiz}>
           New quiz
           <Icon name="arrow" size={18} />
         </button>
+        {questions?.length && round ? (
+          <ChallengeFriend questions={questions} round={round} />
+        ) : null}
         <ShareButton
           result={
             round || {
@@ -166,6 +207,11 @@ const Stats = ({
 };
 Stats.propTypes = {
   round: PropTypes.object,
+  attemptSettings: PropTypes.object,
+  currentAttempt: PropTypes.object,
+  replayDisabled: PropTypes.bool,
+  challenge: PropTypes.object,
+  questions: PropTypes.array,
   isPersonalBest: PropTypes.bool,
   previousBest: PropTypes.object,
   incorrectAnswers: PropTypes.number,

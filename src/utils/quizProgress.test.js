@@ -42,7 +42,7 @@ test('groups only identical settings and keeps custom names in the same comparis
   expect(group[0].key).toBe(roundKey(first));
   expect(group[0].rounds.map((item) => item.id)).toEqual(['1', '2']);
   expect(group[0].label).toBe(
-    'Mixed topics · Easy · 5 questions · 2m · Mixed format'
+    'Mixed topics · Easy · 5 questions · 2m · Mixed format · Exam'
   );
 });
 test('sorts matching rounds chronologically without mutating the saved history', () => {

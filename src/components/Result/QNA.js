@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../Icon';
+import BookmarkButton from '../BookmarkButton';
 
 export const answerStatus = (item) =>
   item.user_answer == null
@@ -8,7 +9,14 @@ export const answerStatus = (item) =>
     : item.point === 1
     ? 'correct'
     : 'incorrect';
-const QNA = ({ questionsAndAnswers, filter, onFilterChange }) => {
+const QNA = ({
+  questionsAndAnswers,
+  filter,
+  onFilterChange,
+  sourceQuestions,
+  bookmarks,
+  onToggleBookmark,
+}) => {
   const [localFilter, setLocalFilter] = useState('all');
   const currentFilter = filter ?? localFilter;
   const selectFilter = onFilterChange || setLocalFilter;
@@ -79,6 +87,11 @@ const QNA = ({ questionsAndAnswers, filter, onFilterChange }) => {
               </span>
             </div>
             <h2>{item.question}</h2>
+            <BookmarkButton
+              question={sourceQuestions?.[item.number - 1]}
+              bookmarks={bookmarks}
+              onToggle={onToggleBookmark}
+            />
             <div className="review-answer-grid">
               <div>
                 <span>Your answer</span>
@@ -109,6 +122,9 @@ const QNA = ({ questionsAndAnswers, filter, onFilterChange }) => {
   );
 };
 QNA.propTypes = {
+  sourceQuestions: PropTypes.array,
+  bookmarks: PropTypes.array,
+  onToggleBookmark: PropTypes.func,
   questionsAndAnswers: PropTypes.array.isRequired,
   filter: PropTypes.string,
   onFilterChange: PropTypes.func,

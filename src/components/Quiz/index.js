@@ -3,10 +3,26 @@ import PropTypes from 'prop-types';
 import he from 'he';
 import Countdown from '../Countdown';
 import Icon from '../Icon';
+import AttemptNotice from '../AttemptNotice';
+import BookmarkButton from '../BookmarkButton';
+import { quizModeLabel } from '../../utils/quizMode';
 import QuestionNavigator from '../QuestionNavigator';
 import { getLetter } from '../../utils';
 
-const Quiz = ({ data, countdownTime, endQuiz, isActive = true }) => {
+const Quiz = ({
+  data,
+  countdownTime,
+  endQuiz,
+  isActive = true,
+  challengeHost,
+  customQuizTitle,
+  attemptSettings,
+  currentAttempt,
+  mode = 'exam',
+  bookmarks,
+  onToggleBookmark,
+}) => {
+  const practice = mode === 'practice';
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState(() => data.map(() => null));
   const [timeTaken, setTimeTaken] = useState(0);
@@ -89,12 +105,14 @@ const Quiz = ({ data, countdownTime, endQuiz, isActive = true }) => {
   const chooseAnswer = useCallback(
     (answer) => {
       setAnswers((current) =>
-        current.map((value, index) =>
-          index === questionIndex ? answer : value
-        )
+        practice && current[questionIndex] !== null
+          ? current
+          : current.map((value, index) =>
+              index === questionIndex ? answer : value
+            )
       );
     },
-    [questionIndex]
+    [questionIndex, practice]
   );
 
   useEffect(() => {
@@ -153,9 +171,16 @@ const Quiz = ({ data, countdownTime, endQuiz, isActive = true }) => {
   return (
     <div className="quiz-page page-enter">
       <section className="page-intro compact-intro">
-        <p className="section-kicker">The round is on</p>
+        <p className="section-kicker">
+          {challengeHost
+            ? `Challenge from ${challengeHost}`
+            : customQuizTitle
+            ? `Your quiz: ${customQuizTitle}`
+            : 'The round is on'}
+        </p>
         <h1>Let’s see what you know.</h1>
       </section>
+      <AttemptNotice settings={attemptSettings} current={currentAttempt} />
       <section className="surface question-card" ref={questionCardRef}>
         <div className="question-toolbar">
           <span className="question-number" id="question-position">
@@ -187,9 +212,17 @@ const Quiz = ({ data, countdownTime, endQuiz, isActive = true }) => {
           isActive={isActive}
         />
         <div className="question-content">
-          <div className="question-tags">
-            <span>{he.decode(question.category || 'Trivia')}</span>
-            <span>{question.difficulty || 'Challenge'}</span>
+          <div className="question-meta">
+            <div className="question-tags">
+              <span>{he.decode(question.category || 'Trivia')}</span>
+              <span>{question.difficulty || 'Challenge'}</span>
+              <span>{quizModeLabel(mode)}</span>
+            </div>
+            <BookmarkButton
+              question={question}
+              bookmarks={bookmarks}
+              onToggle={onToggleBookmark}
+            />
           </div>
           <h2
             id="current-question"
@@ -200,7 +233,9 @@ const Quiz = ({ data, countdownTime, endQuiz, isActive = true }) => {
             {he.decode(question.question)}
           </h2>
           <p className="answer-instruction" id="answer-instruction">
-            Select one answer. You can change it before finishing.
+            {practice
+              ? 'Select one answer. Feedback appears immediately; your answer is then final.'
+              : 'Select one answer. You can change it before finishing.'}
           </p>
           <div
             className="answer-options"
@@ -215,8 +250,21 @@ const Quiz = ({ data, countdownTime, endQuiz, isActive = true }) => {
                   key={answer}
                   className={`answer-option ${
                     selectedAnswer === answer ? 'is-selected' : ''
+                  } ${
+                    practice &&
+                    selectedAnswer !== null &&
+                    answer === he.decode(question.correct_answer)
+                      ? 'practice-correct'
+                      : ''
+                  } ${
+                    practice &&
+                    selectedAnswer === answer &&
+                    answer !== he.decode(question.correct_answer)
+                      ? 'practice-incorrect'
+                      : ''
                   }`}
                   aria-pressed={selectedAnswer === answer}
+                  disabled={practice && selectedAnswer !== null}
                   onClick={() => chooseAnswer(answer)}
                 >
                   <span className="answer-letter" aria-hidden="true">
@@ -224,14 +272,44 @@ const Quiz = ({ data, countdownTime, endQuiz, isActive = true }) => {
                   </span>
                   <span>{answer}</span>
                   <span className="answer-indicator" aria-hidden="true">
-                    {selectedAnswer === answer && (
-                      <Icon name="check" size={15} />
+                    {(selectedAnswer === answer ||
+                      (practice &&
+                        selectedAnswer !== null &&
+                        answer === he.decode(question.correct_answer))) && (
+                      <Icon
+                        name={
+                          practice &&
+                          answer !== he.decode(question.correct_answer)
+                            ? 'close'
+                            : 'check'
+                        }
+                        size={15}
+                      />
                     )}
                   </span>
                 </button>
               );
             })}
           </div>
+          {practice && selectedAnswer !== null && (
+            <div
+              className={`practice-feedback ${
+                selectedAnswer === he.decode(question.correct_answer)
+                  ? 'is-correct'
+                  : 'is-incorrect'
+              }`}
+              role="status"
+              aria-atomic="true"
+            >
+              <strong>
+                {selectedAnswer === he.decode(question.correct_answer)
+                  ? 'That’s correct.'
+                  : 'Not quite.'}
+              </strong>
+              <p>Correct answer: {he.decode(question.correct_answer)}</p>
+              <p>Your first answer is saved. Continue when you’re ready.</p>
+            </div>
+          )}
         </div>
         <div className="question-footer">
           <button
@@ -261,7 +339,11 @@ const Quiz = ({ data, countdownTime, endQuiz, isActive = true }) => {
           </button>
         </div>
       </section>
-      <p className="quiz-note">Your answers and score are shown at the end.</p>
+      <p className="quiz-note">
+        {practice
+          ? 'Practice mode · Learn as you go. Your first answers count toward your score.'
+          : 'Exam mode · Your answers and score are shown at the end.'}
+      </p>
       <label className="shortcuts-toggle">
         <input
           type="checkbox"
@@ -294,7 +376,14 @@ const Quiz = ({ data, countdownTime, endQuiz, isActive = true }) => {
   );
 };
 Quiz.propTypes = {
+  mode: PropTypes.oneOf(['exam', 'practice']),
+  bookmarks: PropTypes.array,
+  onToggleBookmark: PropTypes.func,
   isActive: PropTypes.bool,
+  attemptSettings: PropTypes.object,
+  currentAttempt: PropTypes.object,
+  challengeHost: PropTypes.string,
+  customQuizTitle: PropTypes.string,
   data: PropTypes.array.isRequired,
   countdownTime: PropTypes.number.isRequired,
   endQuiz: PropTypes.func.isRequired,

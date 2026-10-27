@@ -21,7 +21,9 @@ export const progressSettingsLabel = (round) =>
     round.totalQuestions
   } ${
     round.totalQuestions === 1 ? 'question' : 'questions'
-  } · ${formatTimeLimit(round.timeLimit)} · ${formatLabel(round.format)}`;
+  } · ${formatTimeLimit(round.timeLimit)} · ${formatLabel(round.format)} · ${
+    round.mode === 'practice' ? 'Practice' : 'Exam'
+  }${round.fromBookmarks ? ' · Saved questions' : ''}`;
 
 export const groupProgressRounds = (rounds) => {
   const groups = new Map();
